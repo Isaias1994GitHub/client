@@ -175,6 +175,13 @@ void AbstractNetworkJob::slotFinished()
     if (_followRedirects && !redirectUrl.isEmpty()) {
         _redirectCount++;
 
+        // For POSTs where the query args are sent in the body, we need to
+        // manually forward these to the target url - the server can only
+        // return the query-arg-less redirected url in that case.
+        if (reply()->operation() == QNetworkAccessManager::PostOperation && !_requestBody) {
+            redirectUrl.setEncodedQuery(requestedUrl.encodedQuery());
+        }
+
         // ### some of the qWarnings here should be exported via displayErrors() so they
         // ### can be presented to the user if the job executor has a GUI
         QByteArray verb = requestVerb(*reply());
